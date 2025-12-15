@@ -1,0 +1,48 @@
+import dns.resolver
+import dns.reversename
+
+# Get ALL DNS records
+print("COMPLETE DNS ANALYSIS")
+print("="*60)
+
+domain = "URDOMAIN.com"
+
+# Check for DNSSEC
+try:
+    answers = dns.resolver.resolve(domain, 'DNSKEY')
+    print("DNSSEC: ENABLED (more secure)")
+except:
+    print("DNSSEC: NOT ENABLED (vulnerable to poisoning)")
+
+# Check NS records (nameservers)
+print("\nNAMESERVERS (who controls DNS):")
+try:
+    answers = dns.resolver.resolve(domain, 'NS')
+    for rdata in answers:
+        print(f"  {rdata.target}")
+        
+        # Check if nameserver is vulnerable
+        ns = str(rdata.target).rstrip('.')
+        if "square" in ns.lower():
+            print(f"    ⚠️ Squarespace controls DNS directly!")
+        elif "cloudflare" in ns.lower():
+            print(f"    🔒 Cloudflare (more secure)")
+        elif "godaddy" in ns.lower():
+            print(f"    ⚠️ GoDaddy (known vulnerabilities)")
+except Exception as e:
+    print(f"Error: {e}")
+
+# Check SOA record (administrative info)
+print("\nSOA RECORD (Zone information):")
+try:
+    answers = dns.resolver.resolve(domain, 'SOA')
+    for rdata in answers:
+        print(f"  Primary NS: {rdata.mname}")
+        print(f"  Admin Email: {rdata.rname}")
+        print(f"  Serial: {rdata.serial}")
+        print(f"  Refresh: {rdata.refresh}")
+        print(f"  Retry: {rdata.retry}")
+        print(f"  Expire: {rdata.expire}")
+        print(f"  Min TTL: {rdata.minimum}")
+except:
+    print("SOA not available")
